@@ -77,7 +77,7 @@ def main():
     # add next button
     button_ax = fig.add_subplot(gsp.GridSpecFromSubplotSpec(
         1, 1, gs[6, 8:12])[0, 0])
-    button = Button(button_ax, 'Bayesian Optimization',
+    button = Button(button_ax, 'Optimize',
         color='lightgoldenrodyellow', hovercolor='0.975')
 
     # button performs BO
