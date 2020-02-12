@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from img.basic import clip_image
 from img.basic import change_type
 from img.basic import display_image
+from img.update import update_image
 from matplotlib.widgets import Slider, Button
 
 
@@ -38,6 +39,23 @@ def slider(fig, ax, img, func, obj, label, vmin, vmax, vinit):
     return s
 
 
+def translate_vals(vmins, vmaxs, vinits, ss):
+    vs = []
+    for (s, vmin, vmax, vinit) in zip(
+        ss, vmins, vmaxs, vinits):
+
+        # map to actual value
+        # TODO: map the multiplication relation differently
+        if s.val >= 0:
+            v = vinit + s.val * (vmax - vinit)
+        else:
+            v = vinit - s.val * (vmin - vinit)
+
+        vs.append(v)
+
+    return vs
+
+
 def sliders(fig, axs, img, obj, funcs, labels, vmins, vmaxs, vinits):
     ss = []
     for (ax, label, vmin, vmax, vinit) in zip(
@@ -47,26 +65,11 @@ def sliders(fig, axs, img, obj, funcs, labels, vmins, vmaxs, vinits):
 
     def update(val):
         # load the parameters from outside
-        nonlocal img
-        nonlocal obj
-        nonlocal fig
-        nonlocal funcs
-        nonlocal ss
-        # manipulate image from scratch
-        # TODO: make every operator invertible
-        new_img = np.array(img)
-        for (s, func, vmin, vmax, vinit) in zip(
-            ss, funcs, vmins, vmaxs, vinits):
+        nonlocal img, obj, fig, funcs, ss
 
-            # map to actual value
-            # TODO: map the multiplication relation differently
-            if s.val >= 0:
-                v = vinit + s.val * (vmax - vinit)
-            else:
-                v = vinit - s.val * (vmin - vinit)
+        vs = translate_vals(vmins, vmaxs, vinits, ss)
+        new_img = update_image(img, funcs, vs)
 
-            # modify figure
-            new_img = func(new_img, v)
         # update image
         obj.set_data(
             display_image(

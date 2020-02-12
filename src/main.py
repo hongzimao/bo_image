@@ -1,10 +1,15 @@
+import os
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gsp
 from matplotlib.widgets import Slider
 from matplotlib.widgets import Button
+from param import config
 from bo.bo import BayesOpt
 from img.interact import sliders
+from img.interact import translate_vals
+from img.update import update_image
 from img.basic import load_image
 from img.basic import change_type
 from img.basic import change_gamma
@@ -19,7 +24,7 @@ from img.basic import change_brightness
 def main():
 
     # load image
-    img = load_image('../test.jpg')
+    img = load_image(config.input_image)
 
     # matplotlib
     fig = plt.figure(figsize=(13,6))
@@ -29,7 +34,6 @@ def main():
 
     # display image
     ax = fig.add_subplot(gs[:, 0:7])
-    img = load_image('../test.jpg')
     rgb = display_image(img)
     im_obj = ax.imshow(rgb, interpolation='nearest')
     ax.get_xaxis().set_ticks([])
@@ -65,7 +69,7 @@ def main():
 
     # add a slider for value
     slider_ax = fig.add_subplot(gsp.GridSpecFromSubplotSpec(
-        1, 1, gs[5, 8:12])[0, 0], facecolor='lightgoldenrodyellow')
+        1, 1, gs[5, 8:12])[0, 0])
     score_slider = Slider(slider_ax, 'Score', 0, 10, 5)
 
     # plot the score history
@@ -77,10 +81,10 @@ def main():
     line_ax.set_xlabel('Steps')
     line_ax.set_ylabel('Scores')
 
-    # add next button
+    # add optimize button
     button_ax = fig.add_subplot(gsp.GridSpecFromSubplotSpec(
-        1, 1, gs[6, 8:12])[0, 0])
-    button = Button(button_ax, 'Optimize',
+        1, 1, gs[6, 8:11])[0, 0])
+    opt_button = Button(button_ax, 'Optimize',
         color='lightgoldenrodyellow', hovercolor='0.975')
 
     # initial trials
@@ -90,14 +94,14 @@ def main():
                    [-0.8, 0, 0.2, -0.9, 0.2, 0.6],  # sharpness
                    [0.05, 0, -0.2, 0, 0.05, 0.7],  # saturation
                    [0.3, 0.2, -0.6, 0.5, 0.7, 0.8]]  # vibrance
-    init_step = 0
+    steps = 0
 
     # bayesian optimization
     bo_x = np.zeros([0, 6])
     bo = BayesOpt()
 
     # button performs BO
-    def next(event):
+    def optimize(event):
         # save values
         scores.append(score_slider.val)
         x = [s.val for s in img_sliders]
@@ -105,15 +109,15 @@ def main():
         bo_x = np.vstack([bo_x, x])
         bo_y = np.array(scores).reshape([-1, 1])
 
-        nonlocal init_step
-        if init_step < len(init_trials[0]):
+        nonlocal steps
+        if steps < len(init_trials[0]):
             # load from initial steps
-            vals = [v[init_step] for v in init_trials]
-            init_step += 1
+            vals = [v[steps] for v in init_trials]
         else:
             # performs bayesian optimization
             vals = bo.update(bo_x, bo_y)[0]
             vals = vals * 2 - 1  # rescale [-1, 1]
+        steps += 1
 
         # update image slider
         for (s, v) in zip(img_sliders, vals):
@@ -126,11 +130,42 @@ def main():
         # reset slider position
         score_slider.set_val(5)
 
-    button.on_clicked(next)
+    # link optimize button
+    opt_button.on_clicked(optimize)
 
+    # add save button
+    save_ax = fig.add_subplot(gsp.GridSpecFromSubplotSpec(
+        1, 1, gs[6, 11:12])[0, 0])
+    save_button = Button(save_ax, 'Save',
+        color='lightgoldenrodyellow', hovercolor='0.975')
+
+    # save figure
+    def save_figure(event):
+        vs = translate_vals(
+            slider_vmins, slider_vmaxs, slider_vinit, img_sliders)
+        new_img = update_image(img, slider_funcs, vs)
+        # get input image file name
+        img_name = '.'.join(config.input_image.split(
+            '.')[:-1]).split('/')[-1]
+        # create folder if not exists
+        if not os.path.exists(config.output_folder):
+            os.makedirs(config.output_folder)
+        # write image
+        cv2.imwrite(config.output_folder + img_name + \
+                    '_brightness_{}_brightness_{}_' \
+                    'gamma_{}_sharpness_{}_' \
+                    'saturation_{}_vibrance_{}_' \
+                    'step_{}.jpg'.format(
+                    *(round(s.val, 2) for s in img_sliders),
+                    steps), new_img)
+        print('Image saved.')
+
+    # link save button
+    save_button.on_clicked(save_figure)
+
+    # show canvas
     plt.show()
 
 
 if __name__ == '__main__':
     main()
-    
