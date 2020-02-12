@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from warnings import simplefilter
 from warnings import catch_warnings
-from mpl_toolkits.mplot3d import Axes3D
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 
