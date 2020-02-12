@@ -15,6 +15,6 @@ In `/src`, run
 python3 main.py --input_image ../data/example.jpg
 ```
 
-At every step, provide feedback for the adjustment by dragging the `Score` slider. You can change any of the processing slider if you like. Click on the `Optimize` button to log the results and perform one step of Bayesian Optimization. Click `Save` to save the current image processing result. The screenshot below shows the optimization process.
+At every step, provide feedback for the adjustment by dragging the `Score` slider. You can also change any of the processing sliders if you like. Click on the `Optimize` button to log the results and perform one step of Bayesian Optimization. Click `Save` to save the current image processing result. The screenshot below shows the optimization process.
 
 ![Screenshot](https://github.com/hongzimao/bo_image/blob/master/data/example_screenshot.png)
