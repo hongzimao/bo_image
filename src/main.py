@@ -32,6 +32,8 @@ def main():
     img = load_image('../test.jpg')
     rgb = display_image(img)
     im_obj = ax.imshow(rgb, interpolation='nearest')
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
 
     # set up slider ax
     adjustments = ['contrast', 'brightness', 'gamma',
