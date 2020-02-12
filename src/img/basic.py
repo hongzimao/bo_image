@@ -36,6 +36,7 @@ def change_brightness(img, beta):
 
 def change_gamma(img, gamma):
     assert(img.dtype != np.uint8)
+    img = np.clip(img, 0, np.inf)
     return (img / 255) ** gamma * 255
 
 

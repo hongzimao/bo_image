@@ -40,8 +40,10 @@ def slider(fig, ax, img, func, obj, label, vmin, vmax, vinit):
 
 def sliders(fig, axs, img, obj, funcs, labels, vmins, vmaxs, vinits):
     ss = []
-    for (ax, label, vmin, vmax, vinit) in zip(axs, labels, vmins, vmaxs, vinits):
-        ss.append(Slider(ax, label, vmin, vmax, vinit))
+    for (ax, label, vmin, vmax, vinit) in zip(
+        axs, labels, vmins, vmaxs, vinits):
+        # add a slider
+        ss.append(Slider(ax, label, -1, 1, 0))
 
     def update(val):
         # load the parameters from outside
@@ -50,13 +52,27 @@ def sliders(fig, axs, img, obj, funcs, labels, vmins, vmaxs, vinits):
         nonlocal fig
         nonlocal funcs
         nonlocal ss
+        # manipulate image from scratch
+        # TODO: make every operator invertible
         new_img = np.array(img)
-        for (s, func) in zip(ss, funcs):
-            new_img = func(new_img, s.val)
+        for (s, func, vmin, vmax, vinit) in zip(
+            ss, funcs, vmins, vmaxs, vinits):
+
+            # map to actual value
+            # TODO: map the multiplication relation differently
+            if s.val >= 0:
+                v = vinit + s.val * (vmax - vinit)
+            else:
+                v = vinit - s.val * (vmin - vinit)
+
+            # modify figure
+            new_img = func(new_img, v)
+        # update image
         obj.set_data(
             display_image(
             change_type(
             clip_image(new_img), np.uint8)))
+        # matplotlib update
         fig.canvas.draw_idle()
 
     for s in ss:
