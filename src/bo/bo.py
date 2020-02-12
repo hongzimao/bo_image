@@ -27,7 +27,7 @@ def acquisition(x, x_samples, model):
     return probs
 
 
-def sample_next(x, model, sample_size=100):
+def sample_next(x, model, sample_size=500):
     # random search, generate random samples
     x_samples = np.random.random(size=(sample_size, x.shape[1]))
     # calculate the acquisition function for each sample
